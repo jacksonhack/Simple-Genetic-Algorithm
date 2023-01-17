@@ -11,7 +11,7 @@
 
 // Class definition
 class SGA {
-    // Global variables
+    // Static variables
     final static int POPULATION_SIZE = 100;
     final static int MAX_GENERATIONS = 10;
     static boolean terminated; // Termination condition, flipped to true when termination condition is met
