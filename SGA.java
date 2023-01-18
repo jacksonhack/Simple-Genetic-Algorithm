@@ -56,9 +56,6 @@ class SGA {
 
         // While termination condition not met and max generations not reached
         while (!terminated) {
-            // Print current generation
-            System.out.println("Generation " + generation);
-
             // Select parents
             selectParents();
 
@@ -101,20 +98,26 @@ class SGA {
         population.setIndividuals(individuals);
     }
 
+    // calculate fitness of a single individual
+    public static int calculateFitness(Individual individual) {
+        // for maxones, fitness is the number of 1s in the bit string
+        int fitness = 0;
+        int[] bitString = individual.getBitString();
+        for (int i = 0; i < BITSTRING_LENGTH; i++) {
+            if (bitString[i] == 1) {
+                fitness++;
+            }
+        }
+        return fitness;
+    }
+
     // Evaluate population function
-    public static void evaluatePopulation() {
+    private static void evaluatePopulation() {
         // Evaluate population by calculating fitness of each individual and setting fitness variable
-        // For max one problem, fitness is the number of 1s in the bit string
         Individual[] individuals = population.getIndividuals();
         for (int i = 0; i < POPULATION_SIZE; i++) {
             Individual individual = individuals[i];
-            int[] bitString = individual.getBitString();
-            int fitness = 0;
-            for (int j = 0; j < BITSTRING_LENGTH; j++) {
-                if (bitString[j] == 1) {
-                    fitness++;
-                }
-            }
+            int fitness = calculateFitness(individual);
             individual.setFitness(fitness);
         }
 
@@ -165,32 +168,32 @@ class SGA {
     }
 
     // Select parents function
-    public static void selectParents() {
+    private static void selectParents() {
         // TODO: Select parents via roulette wheel selection (fitness proportionatal)
         System.out.println("Selecting parents...");
     }
 
     // Crossover function
-    public static void crossover() {
+    private static void crossover() {
         // TODO: Crossover (single point)
         System.out.println("Crossover...");
     }
 
     // Mutate function
-    public static void mutate() {
+    private static void mutate() {
         // TODO: Mutate (bitwise with fixed mutation rate for each bit)
         System.out.println("Mutating...");
     }
 
     // Select survivors function
-    public static void selectSurvivors() {
+    private static void selectSurvivors() {
         // TODO: Select survivors (full replacement, all children replace all parents)
         System.out.println("Selecting survivors...");
     }
 
     // Check termination function
-    public static void checkTermination() {
-        // TODO: Check termination condition (max generations reached)
+    private static void checkTermination() {
+        // TODO: Check termination condition (max generations reached or population converged), print termination reason
         System.out.println("Checking termination...");
         if (generation >= MAX_GENERATIONS) {
             terminated = true;
