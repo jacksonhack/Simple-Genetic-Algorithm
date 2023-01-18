@@ -120,6 +120,8 @@ class SGA {
 
         population.setIndividuals(individuals); // update population with new fitness values
 
+        // total fitness
+        int totalFitness = 0;
         // indistinct individuals
         int indistinct = 0;
 
@@ -137,7 +139,7 @@ class SGA {
             }
 
             // average fitness total
-            avgFitness += fitness;
+            totalFitness += fitness;
 
 
             int[] bitString = individual.getBitString();
@@ -152,7 +154,7 @@ class SGA {
         }
 
         // average fitness final calculation
-        avgFitness /= POPULATION_SIZE;
+        avgFitness = (double) totalFitness / POPULATION_SIZE;
 
         // percentage of identical individuals
         identical = ((double) indistinct / POPULATION_SIZE) * 100;
