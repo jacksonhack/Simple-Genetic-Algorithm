@@ -293,8 +293,6 @@ class Individual {
     // Instance variables
     int[] bitString; // Bit string
     int fitness; // Fitness
-    int rouletteBottom; // Lower bound of roulette section for this individual
-    int rouletteTop; // Upper bound of roulette section for this individual
 
     // Constructor
     public Individual() {
@@ -323,26 +321,6 @@ class Individual {
     // Set fitness function
     public void setFitness(int fitness) {
         this.fitness = fitness;
-    }
-
-    // Get roulette bottom function
-    public int getRouletteBottom() {
-        return rouletteBottom;
-    }
-
-    // Set roulette bottom function
-    public void setRouletteBottom(int rouletteBottom) {
-        this.rouletteBottom = rouletteBottom;
-    }
-
-    // Get roulette top function
-    public int getRouletteTop() {
-        return rouletteTop;
-    }
-
-    // Set roulette top function
-    public void setRouletteTop(int rouletteTop) {
-        this.rouletteTop = rouletteTop;
     }
 
     // toString function
