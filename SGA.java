@@ -1,5 +1,8 @@
 import java.util.Arrays;
 import java.util.HashMap;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
 
 /*
  * Jackson Hacker
@@ -25,14 +28,18 @@ class SGA {
 
     // Population variables
     static int BITSTRING_LENGTH = 8; // Bitstring length
-    static Population population; // Population
+    static Population population = new Population(); // Population
     static Population parents; // Parents
     static Population children; // Children
+    static Individual champion; // Champion
 
     // fitness meausures
     static int maxFitness; // Max fitness
     static double avgFitness; // Average fitness
     static double identical; // Percentage of Identical individuals
+
+    // File writer
+    static Writer fileWriter;
 
     // main method
     public static void main(String[] args) {
@@ -40,14 +47,20 @@ class SGA {
         generation = 0;
         terminated = false;
 
+        try {
+            fileWriter = new FileWriter(new File("output.txt"), false);
+        } catch (Exception e) {
+            System.out.println("Error: " + e);
+        }
+
         // Print "one time header" <problem name> <population size> <bitstring genome length> <mutation rate> <crossover rate>
-        System.out.println(PROBLEM_NAME + " " + POPULATION_SIZE + " " + BITSTRING_LENGTH + " " + MUTATION_RATE + " " + CROSSOVER_RATE);
+        writeToFile(PROBLEM_NAME + " " + POPULATION_SIZE + " " + BITSTRING_LENGTH + " " + MUTATION_RATE + " " + CROSSOVER_RATE + "\n");
 
         // Initialize population
         initializePopulation();
 
         // Print header for generation stats
-        System.out.println("Generation\tChamp Fitness\tAvg Fitness\t%Identical");
+        writeToFile("Generation\tChamp Fitness\tAvg Fitness\t\t%Identical");
 
         // Evaluate population
         evaluatePopulation();
@@ -77,6 +90,17 @@ class SGA {
             // Increment iterations
             generation++;
         }
+
+        // Print champion after termination
+        writeToFile("\nChampion genotype:\t" + champion.toString());
+        writeToFile("Champion fitness:\t" + champion.getFitness());
+
+        // close file writer
+        try {
+            fileWriter.close();
+        } catch (Exception e) {
+            System.out.println("Error: " + e);
+        }
     }
 
     // Initialize population function
@@ -84,7 +108,6 @@ class SGA {
         // Initialize population with uniform random values
         // build population with POPULATION_SIZE individuals,
         // each with a bit string of length BITSTRING_LENGTH, each bit randomly set to 0 or 1
-        population = new Population();
         Individual[] individuals = new Individual[POPULATION_SIZE];
         for (int i = 0; i < POPULATION_SIZE; i++) {
             Individual individual = new Individual();
@@ -139,14 +162,13 @@ class SGA {
             // max fitness
             if (fitness > maxFitness) {
                 maxFitness = fitness;
+                champion = individual; // set champion to individual with max fitness
             }
 
             // average fitness total
             totalFitness += fitness;
 
-
-            int[] bitString = individual.getBitString();
-            String bitStringString = Arrays.toString(bitString);
+            String bitStringString = individual.toString();
             if (distincts.containsKey(bitStringString)) {
                 // if individual is already in the hash map, increment the count (found duplicate)
                 indistinct++;
@@ -164,7 +186,7 @@ class SGA {
 
         // Print max fitness, average fitness, and percentage of identical individuals
         // <gen number> <fitness score of champion> <average fitness score> <percent of genomes in pop that are identical>
-        System.out.println(generation + "\t\t" + maxFitness + "\t\t" + avgFitness + "\t\t" + identical);
+        writeToFile(generation + "\t\t\t" + maxFitness + "\t\t\t\t" + avgFitness + "\t\t\t" + identical);
     }
 
     // Select parents function
@@ -197,6 +219,15 @@ class SGA {
         System.out.println("Checking termination...");
         if (generation >= MAX_GENERATIONS) {
             terminated = true;
+        }
+    }
+
+    // write to file function
+    private static void writeToFile(String line) {
+        try {
+            fileWriter.write(line + "\n");
+        } catch (Exception e) {
+            System.out.println("Error: " + e);
         }
     }
 
@@ -235,6 +266,11 @@ class Individual {
     // Set fitness function
     public void setFitness(int fitness) {
         this.fitness = fitness;
+    }
+
+    // toString function
+    public String toString() {
+        return Arrays.toString(bitString);
     }
 }
 
