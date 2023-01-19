@@ -69,7 +69,7 @@ class SGA {
         // While termination condition not met and max generations not reached
         while (!terminated) {
             // breed children by roulette wheel selection of parents and crossover
-            breed();
+            breedAndReplace(); // also replaces population with children
 
             // Mutate
             mutate();
@@ -77,8 +77,6 @@ class SGA {
             // Evaluate population
             evaluatePopulation();
 
-            // Select survivors
-            selectSurvivors();
 
             // Check termination condition (flip terminated to true if met)
             checkTermination();
@@ -213,8 +211,9 @@ class SGA {
         return selected;
     }
 
-    // Select parents function
-    private static void breed() {
+    // returns children from roulette wheel selection of parents and crossover
+    // also replaces population with children (full replacement)
+    private static void breedAndReplace() {
         System.out.println("Selecting parents...");
 
         // get individuals from population
@@ -260,12 +259,6 @@ class SGA {
     private static void mutate() {
         // TODO: Mutate (bitwise with fixed mutation rate for each bit)
         System.out.println("Mutating...");
-    }
-
-    // Select survivors function
-    private static void selectSurvivors() {
-        // TODO: Select survivors (full replacement, all children replace all parents)
-        System.out.println("Selecting survivors...");
     }
 
     // Check termination function
