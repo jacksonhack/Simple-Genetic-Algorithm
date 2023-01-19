@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.io.File;
 import java.io.FileWriter;
@@ -19,18 +20,17 @@ import java.io.Writer;
 class SGA {
     // Static variables
     final static String PROBLEM_NAME = "maxones";
-    final static int POPULATION_SIZE = 100;
-    final static int MAX_GENERATIONS = 1;
+    final static int POPULATION_SIZE = 1000;
+    final static int MAX_GENERATIONS = 100;
     final static double CROSSOVER_RATE = 0.5;
     final static double MUTATION_RATE = 0.01;
     static boolean terminated; // Termination condition, flipped to true when termination condition is met
     static int generation; // Current generation
 
     // Population variables
-    static int BITSTRING_LENGTH = 8; // Bitstring length
+    static int BITSTRING_LENGTH = 16; // Bitstring length
     static Population population = new Population(); // Population
-    static Population parents; // Parents
-    static Population children; // Children
+    static Population children = new Population(); // Children
     static Individual champion; // Champion
 
     // fitness meausures
@@ -69,11 +69,8 @@ class SGA {
 
         // While termination condition not met and max generations not reached
         while (!terminated) {
-            // Select parents
-            selectParents();
-
-            // Crossover
-            crossover();
+            // breed children by roulette wheel selection of parents and crossover
+            breed();
 
             // Mutate
             mutate();
@@ -144,7 +141,7 @@ class SGA {
             individual.setFitness(fitness);
         }
 
-        population.setIndividuals(individuals); // update population with new fitness values
+        population.setIndividuals(individuals); // update population with fitness values
 
         // total fitness
         int totalFitness = 0;
@@ -186,19 +183,81 @@ class SGA {
 
         // Print max fitness, average fitness, and percentage of identical individuals
         // <gen number> <fitness score of champion> <average fitness score> <percent of genomes in pop that are identical>
-        writeToFile(generation + "\t\t\t" + maxFitness + "\t\t\t\t" + avgFitness + "\t\t\t" + identical);
+        writeToFile(generation + "\t\t\t" + maxFitness + "\t\t\t\t" + avgFitness + "\t\t\t\t" + identical);
+    }
+
+    // function to build roulette wheel
+    private static Individual[] buildRouletteWheel(Individual[] individuals, int totalFitness) {
+        Individual[] rouletteWheel = new Individual[totalFitness];
+        
+        int currentSlot = 0;
+
+        // roulette wheen is a 0-totalFitness array of individuals
+        // each individual is added to the roulette wheel a number of times equal to its fitness
+        for (int i = 0; i < POPULATION_SIZE; i++) {
+            Individual individual = individuals[i];
+            int fitness = individual.getFitness();
+            for (int j = 0; j < fitness; j++) {
+                rouletteWheel[currentSlot] = individual;
+                currentSlot++;
+            }
+        }
+
+        return rouletteWheel;
+    }
+
+    // roulette select function
+    private static Individual rouletteSelect(Individual[] rouletteWheel) {
+        // select a random individual from the roulette wheel
+        int randomIndex = (int) Math.floor(Math.random() * rouletteWheel.length);
+        Individual selected = rouletteWheel[randomIndex];
+        return selected;
     }
 
     // Select parents function
-    private static void selectParents() {
+    private static void breed() {
         // TODO: Select parents via roulette wheel selection (fitness proportionatal)
         System.out.println("Selecting parents...");
+
+        // get individuals from population
+        Individual[] individuals = population.getIndividuals();
+
+        // get total fitness
+        int totalFitness = 0;
+        for (int i = 0; i < POPULATION_SIZE; i++) {
+            Individual individual = individuals[i];
+            int fitness = individual.getFitness();
+            totalFitness += fitness;
+        }
+
+        // build roulette wheel
+        Individual[] rouletteWheel = buildRouletteWheel(individuals, totalFitness);
+
+        Individual parent1 = null;
+        Individual parent2 = null;
+
+        // list of children
+        Individual[] children = new Individual[POPULATION_SIZE];
+
+        // Roulette wheel selection
+        // for each child, pick a random numbers between 0 and totalFitness-1, and find the individual whose roulette section contains that number
+        // and repeat for second parent, then perform crossover on the two parents to create the child
+        for (int i = 0; i < POPULATION_SIZE; i++) {
+            parent1 = rouletteSelect(rouletteWheel);
+            parent2 = rouletteSelect(rouletteWheel);
+            Individual child = crossover(parent1, parent2);
+            children[i] = child;
+        }
+
+        // set children as population
+        population.setIndividuals(children);
     }
 
     // Crossover function
-    private static void crossover() {
+    private static Individual crossover(Individual parent1, Individual parent2) {
         // TODO: Crossover (single point)
-        System.out.println("Crossover...");
+
+        return parent1;
     }
 
     // Mutate function
@@ -238,6 +297,8 @@ class Individual {
     // Instance variables
     int[] bitString; // Bit string
     int fitness; // Fitness
+    int rouletteBottom; // Lower bound of roulette section for this individual
+    int rouletteTop; // Upper bound of roulette section for this individual
 
     // Constructor
     public Individual() {
@@ -266,6 +327,26 @@ class Individual {
     // Set fitness function
     public void setFitness(int fitness) {
         this.fitness = fitness;
+    }
+
+    // Get roulette bottom function
+    public int getRouletteBottom() {
+        return rouletteBottom;
+    }
+
+    // Set roulette bottom function
+    public void setRouletteBottom(int rouletteBottom) {
+        this.rouletteBottom = rouletteBottom;
+    }
+
+    // Get roulette top function
+    public int getRouletteTop() {
+        return rouletteTop;
+    }
+
+    // Set roulette top function
+    public void setRouletteTop(int rouletteTop) {
+        this.rouletteTop = rouletteTop;
     }
 
     // toString function
