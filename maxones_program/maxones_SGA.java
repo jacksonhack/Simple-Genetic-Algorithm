@@ -1,3 +1,4 @@
+package maxones_program;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.io.File;
@@ -16,18 +17,20 @@ import java.io.Writer;
 
 
 // Class definition
-class SGA {
-    // Static variables
+class maxones_SGA {
+    // final Static variables
     final static String PROBLEM_NAME = "maxones";
-    final static int POPULATION_SIZE = 1000;
-    final static int MAX_GENERATIONS = 100;
+    final static int POPULATION_SIZE = 100;
+    final static int MAX_GENERATIONS = 2000;
     final static double CROSSOVER_RATE = 0.5;
     final static double MUTATION_RATE = 0.01;
+    final static int GENOME_LENGTH = 32; // Bitstring length
+    final static int CONVERGENCE_THRESHOLD = 10; // Convergence threshold (number of generations with identical percentage of identical individuals)
+
     static boolean terminated; // Termination condition, flipped to true when termination condition is met
     static int generation; // Current generation
 
     // Population variables
-    static int BITSTRING_LENGTH = 16; // Bitstring length
     static Population population = new Population(); // Population
     static Population children = new Population(); // Children
     static Individual champion; // Champion
@@ -36,6 +39,8 @@ class SGA {
     static int maxFitness; // Max fitness
     static double avgFitness; // Average fitness
     static double identical; // Percentage of Identical individuals
+
+    static double[] identicalHistory = new double[CONVERGENCE_THRESHOLD]; // History of identical percentages over past N generations
 
     // File writer
     static Writer fileWriter;
@@ -53,7 +58,7 @@ class SGA {
         }
 
         // Print "one time header" <problem name> <population size> <bitstring genome length> <mutation rate> <crossover rate>
-        writeToFile(PROBLEM_NAME + " " + POPULATION_SIZE + " " + BITSTRING_LENGTH + " " + MUTATION_RATE + " " + CROSSOVER_RATE + "\n");
+        writeToFile(PROBLEM_NAME + " " + POPULATION_SIZE + " " + GENOME_LENGTH + " " + MUTATION_RATE + " " + CROSSOVER_RATE + "\n");
 
         // Initialize population
         initializePopulation();
@@ -95,6 +100,9 @@ class SGA {
         } catch (Exception e) {
             System.out.println("Error: " + e);
         }
+
+        // Print location of output file
+        System.out.println("Output file written to: " + new File("output.txt").getAbsolutePath());
     }
 
     // Initialize population function
@@ -105,8 +113,8 @@ class SGA {
         Individual[] individuals = new Individual[POPULATION_SIZE];
         for (int i = 0; i < POPULATION_SIZE; i++) {
             Individual individual = new Individual();
-            int[] bitString = new int[BITSTRING_LENGTH];
-            for (int j = 0; j < BITSTRING_LENGTH; j++) {
+            int[] bitString = new int[GENOME_LENGTH];
+            for (int j = 0; j < GENOME_LENGTH; j++) {
                 bitString[j] = (int) Math.round(Math.random());
             }
             individual.setBitString(bitString);
@@ -120,7 +128,7 @@ class SGA {
         // for maxones, fitness is the number of 1s in the bit string
         int fitness = 0;
         int[] bitString = individual.getBitString();
-        for (int i = 0; i < BITSTRING_LENGTH; i++) {
+        for (int i = 0; i < GENOME_LENGTH; i++) {
             if (bitString[i] == 1) {
                 fitness++;
             }
@@ -178,6 +186,12 @@ class SGA {
         // percentage of identical individuals
         identical = ((double) indistinct / POPULATION_SIZE) * 100;
 
+        // update identical history
+        for (int i = 0; i < CONVERGENCE_THRESHOLD - 1; i++) {
+            identicalHistory[i] = identicalHistory[i + 1];
+        }
+        identicalHistory[CONVERGENCE_THRESHOLD - 1] = identical;
+
         // Print max fitness, average fitness, and percentage of identical individuals
         // <gen number> <fitness score of champion> <average fitness score> <percent of genomes in pop that are identical>
         writeToFile(generation + "\t\t\t" + maxFitness + "\t\t\t\t" + avgFitness + "\t\t\t\t" + identical);
@@ -214,8 +228,6 @@ class SGA {
     // returns children from roulette wheel selection of parents and crossover
     // also replaces population with children (full replacement)
     private static void breedAndReplace() {
-        System.out.println("Selecting parents...");
-
         // get individuals from population
         Individual[] individuals = population.getIndividuals();
 
@@ -250,7 +262,34 @@ class SGA {
 
     // Crossover function
     private static Individual crossover(Individual parent1, Individual parent2) {
-        // TODO: Crossover (single point)
+        // generate random number between 0 and 1, if less than crossover rate, crossover
+        // if not, return parent1 (clone)
+        double random = Math.random();
+        if (random < CROSSOVER_RATE) {
+            int[] parent1BitString = parent1.getBitString();
+            int[] parent2BitString = parent2.getBitString();
+
+            // generate random crossover point
+            int crossoverPoint = (int) Math.floor(Math.random() * GENOME_LENGTH);
+
+            // create child bit string
+            int[] childBitString = new int[GENOME_LENGTH];
+
+            // copy first part of parent1 bit string to child bit string
+            for (int i = 0; i < crossoverPoint; i++) {
+                childBitString[i] = parent1BitString[i];
+            }
+
+            // copy second part of parent2 bit string to child bit string
+            for (int i = crossoverPoint; i < GENOME_LENGTH; i++) {
+                childBitString[i] = parent2BitString[i];
+            }
+
+            // create child individual
+            Individual child = new Individual();
+            child.setBitString(childBitString);
+            return child;
+        }
 
         return parent1;
     }
@@ -258,16 +297,58 @@ class SGA {
     // Mutate function
     private static void mutate() {
         // TODO: Mutate (bitwise with fixed mutation rate for each bit)
-        System.out.println("Mutating...");
+        // mutate all individuals in population, flipping each bit with a probability of MUTATION_RATE
+        Individual[] individuals = population.getIndividuals();
+        for (int i = 0; i < POPULATION_SIZE; i++) {
+            Individual individual = individuals[i];
+            int[] bitString = individual.getBitString();
+            for (int j = 0; j < GENOME_LENGTH; j++) {
+                double random = Math.random();
+                if (random < MUTATION_RATE) { // flip if random number is less than mutation rate
+                    if (bitString[j] == 0) {
+                        bitString[j] = 1;
+                    } else {
+                        bitString[j] = 0;
+                    }
+                }
+            }
+            individual.setBitString(bitString);
+        }
     }
 
     // Check termination function
     private static void checkTermination() {
-        // TODO: Check termination condition (max generations reached or population converged), print termination reason
-        System.out.println("Checking termination...");
+        // check if max generations reached
         if (generation >= MAX_GENERATIONS) {
             terminated = true;
+
+            // write to file termination reason
+            writeToFile("TERMINATED AT GENERATION " + generation + "\n");
+            writeToFile("Termination reason: Max generations reached\n\n");
         }
+
+        // check if population converged (% of identical individuals has not changed for 10 generations)
+        if (generation > 10) {
+            // check if identical percentage has changed for last 10 generations using a sliding window
+            // on identicalHistory, which contains the past 10 generations' identical percentages
+            boolean converged = true;
+            for (int i = 0; i < CONVERGENCE_THRESHOLD-1; i++) {
+                if (identicalHistory[i] != identicalHistory[i + 1]) {
+                    converged = false;
+                    break;
+                }
+            }
+
+            // if converged, terminate
+            if (converged) {
+                terminated = true;
+
+                // write to file termination reason
+                writeToFile("TERMINATED AT GENERATION " + generation + "\n");
+                writeToFile("Termination reason: Population converged for " + CONVERGENCE_THRESHOLD + " generations\n\n");
+            }
+        }
+
     }
 
     // write to file function
@@ -290,7 +371,7 @@ class Individual {
     // Constructor
     public Individual() {
         // Initialize bit string
-        bitString = new int[SGA.BITSTRING_LENGTH];
+        bitString = new int[maxones_SGA.GENOME_LENGTH];
 
         // Initialize fitness
         fitness = 0;
@@ -330,7 +411,7 @@ class Population {
     // Constructor
     public Population() {
         // Initialize individuals
-        individuals = new Individual[SGA.POPULATION_SIZE];
+        individuals = new Individual[maxones_SGA.POPULATION_SIZE];
     }
 
     // Get individuals function
