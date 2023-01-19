@@ -186,7 +186,7 @@ class SGA {
         writeToFile(generation + "\t\t\t" + maxFitness + "\t\t\t\t" + avgFitness + "\t\t\t\t" + identical);
     }
 
-    // function to build roulette wheel
+    // function to build roulette wheel (fitness proportionatal selection)
     private static Individual[] buildRouletteWheel(Individual[] individuals, int totalFitness) {
         Individual[] rouletteWheel = new Individual[totalFitness];
         
@@ -216,7 +216,6 @@ class SGA {
 
     // Select parents function
     private static void breed() {
-        // TODO: Select parents via roulette wheel selection (fitness proportionatal)
         System.out.println("Selecting parents...");
 
         // get individuals from population
@@ -239,9 +238,7 @@ class SGA {
         // list of children
         Individual[] children = new Individual[POPULATION_SIZE];
 
-        // Roulette wheel selection
-        // for each child, pick a random numbers between 0 and totalFitness-1, and find the individual whose roulette section contains that number
-        // and repeat for second parent, then perform crossover on the two parents to create the child
+        // Roulette wheel selection of parents
         for (int i = 0; i < POPULATION_SIZE; i++) {
             parent1 = rouletteSelect(rouletteWheel);
             parent2 = rouletteSelect(rouletteWheel);
