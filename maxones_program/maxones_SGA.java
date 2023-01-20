@@ -296,7 +296,6 @@ class maxones_SGA {
 
     // Mutate function
     private static void mutate() {
-        // TODO: Mutate (bitwise with fixed mutation rate for each bit)
         // mutate all individuals in population, flipping each bit with a probability of MUTATION_RATE
         Individual[] individuals = population.getIndividuals();
         for (int i = 0; i < POPULATION_SIZE; i++) {
