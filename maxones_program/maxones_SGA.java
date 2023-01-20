@@ -23,7 +23,7 @@ class maxones_SGA {
     final static double CROSSOVER_RATE = 0.5;
     final static double MUTATION_RATE = 0.01;
     final static int GENOME_LENGTH = 32; // Bitstring length
-    final static int CONVERGENCE_THRESHOLD = 10; // Convergence threshold (number of generations with identical percentage of identical individuals)
+    final static int CONVERGENCE_THRESHOLD = 10; // Convergence threshold (number of generations with similar average fitness to terminate)
 
     static boolean terminated; // Termination condition, flipped to true when termination condition is met
     static int generation; // Current generation
@@ -336,13 +336,14 @@ class maxones_SGA {
         // check if population converged 
         //(average fitness of population has not changed by more than 1% in the last CONVERGENCE_THRESHOLD generations)
         if (generation >= CONVERGENCE_THRESHOLD) {
+            // if percent change in average fitness is less than 1% between each pair of generations in the last CONVERGENCE_THRESHOLD generations, terminate
+            double percentChange = 0;
             boolean converged = true;
-            for (int i = 1; i < CONVERGENCE_THRESHOLD; i++) {
-                double average = avgHistory[i];
-                double previousAverage = avgHistory[i - 1];
-                double difference = Math.abs(average - previousAverage);
-                double percentDifference = difference / previousAverage;
-                if (percentDifference > 0.01) {
+            for (int i = 0; i < CONVERGENCE_THRESHOLD - 1; i++) {
+                double fitness1 = avgHistory[i];
+                double fitness2 = avgHistory[i + 1];
+                percentChange = Math.abs((fitness2 - fitness1) / fitness1);
+                if (percentChange > 0.01) {
                     converged = false;
                     break;
                 }
