@@ -1,20 +1,17 @@
 package maxones_program;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.Writer;
-
+import java.util.ArrayList;
 /*
  * Jackson Hacker
  * CS 5146: Evolutionary Computing
  * Simple Genetic Algorithm
  * 1/17/2023
  */
-
-
-// Import statements
-
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
 
 // Class definition
 class maxones_SGA {
@@ -40,7 +37,7 @@ class maxones_SGA {
     static double avgFitness; // Average fitness
     static double identical; // Percentage of Identical individuals
 
-    static double[] identicalHistory = new double[CONVERGENCE_THRESHOLD]; // History of identical percentages over past N generations
+    static double[] avgHistory = new double[CONVERGENCE_THRESHOLD]; // History of average fitness over past N generations
 
     // File writer
     static Writer fileWriter;
@@ -186,11 +183,11 @@ class maxones_SGA {
         // percentage of identical individuals
         identical = ((double) indistinct / POPULATION_SIZE) * 100;
 
-        // update identical history
-        for (int i = 0; i < CONVERGENCE_THRESHOLD - 1; i++) {
-            identicalHistory[i] = identicalHistory[i + 1];
+        // update average history
+        for (int i = 0; i < avgHistory.length - 1; i++) {
+            avgHistory[i] = avgHistory[i + 1];
         }
-        identicalHistory[CONVERGENCE_THRESHOLD - 1] = identical;
+        avgHistory[avgHistory.length - 1] = avgFitness;
 
         // Print max fitness, average fitness, and percentage of identical individuals
         // <gen number> <fitness score of champion> <average fitness score> <percent of genomes in pop that are identical>
@@ -198,19 +195,16 @@ class maxones_SGA {
     }
 
     // function to build roulette wheel (fitness proportionatal selection)
-    private static Individual[] buildRouletteWheel(Individual[] individuals, int totalFitness) {
-        Individual[] rouletteWheel = new Individual[totalFitness];
-        
-        int currentSlot = 0;
-
-        // roulette wheen is a 0-totalFitness array of individuals
-        // each individual is added to the roulette wheel a number of times equal to its fitness
+    private static List<Individual> buildRouletteWheel(Individual[] individuals, double totalFitness) {
+        // for each individual, add it to the roulette wheel a proportional amount of times according to its fitness
+        // the more fit an individual is, the more times it will be added to the roulette wheel
+        List <Individual> rouletteWheel = new ArrayList<Individual>();
         for (int i = 0; i < POPULATION_SIZE; i++) {
             Individual individual = individuals[i];
-            int fitness = individual.getFitness();
-            for (int j = 0; j < fitness; j++) {
-                rouletteWheel[currentSlot] = individual;
-                currentSlot++;
+            double fitness = individual.getFitness();
+            int numTimes = (int) Math.floor((fitness / totalFitness) * POPULATION_SIZE);
+            for (int j = 0; j < numTimes; j++) {
+                rouletteWheel.add(individual);
             }
         }
 
@@ -218,10 +212,10 @@ class maxones_SGA {
     }
 
     // roulette select function
-    private static Individual rouletteSelect(Individual[] rouletteWheel) {
+    private static Individual rouletteSelect(List<Individual> rouletteWheel) {
         // select a random individual from the roulette wheel
-        int randomIndex = (int) Math.floor(Math.random() * rouletteWheel.length);
-        Individual selected = rouletteWheel[randomIndex];
+        int randomIndex = (int) Math.floor(Math.random() * rouletteWheel.size());
+        Individual selected = rouletteWheel.get(randomIndex);
         return selected;
     }
 
@@ -240,7 +234,7 @@ class maxones_SGA {
         }
 
         // build roulette wheel
-        Individual[] rouletteWheel = buildRouletteWheel(individuals, totalFitness);
+        List<Individual> rouletteWheel = buildRouletteWheel(individuals, totalFitness);
 
         Individual parent1 = null;
         Individual parent2 = null;
@@ -326,27 +320,29 @@ class maxones_SGA {
             writeToFile("Termination reason: Max generations reached\n\n");
         }
 
-        // check if population converged (% of identical individuals has not changed for 10 generations)
-        if (generation > 10) {
-            // check if identical percentage has changed for last 10 generations using a sliding window
-            // on identicalHistory, which contains the past 10 generations' identical percentages
+        // check if population converged 
+        //(average fitness of population has not changed by more than 1% in the last CONVERGENCE_THRESHOLD generations)
+        if (generation >= 10) {
             boolean converged = true;
-            for (int i = 0; i < CONVERGENCE_THRESHOLD-1; i++) {
-                if (identicalHistory[i] != identicalHistory[i + 1]) {
+            for (int i = 1; i < CONVERGENCE_THRESHOLD; i++) {
+                double average = avgHistory[i];
+                double previousAverage = avgHistory[i - 1];
+                double difference = Math.abs(average - previousAverage);
+                double percentDifference = difference / previousAverage;
+                if (percentDifference > 0.01) {
                     converged = false;
                     break;
                 }
             }
-
-            // if converged, terminate
             if (converged) {
                 terminated = true;
 
                 // write to file termination reason
                 writeToFile("TERMINATED AT GENERATION " + generation + "\n");
-                writeToFile("Termination reason: Population converged for " + CONVERGENCE_THRESHOLD + " generations\n\n");
+                writeToFile("Termination reason: Average fitness converged\n\n");
             }
         }
+
 
     }
 
