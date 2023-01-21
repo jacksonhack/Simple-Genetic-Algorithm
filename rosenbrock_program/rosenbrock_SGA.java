@@ -22,11 +22,11 @@ import java.util.ArrayList;
 class rosenbrock_SGA {
     // final Static variables
     final static String PROBLEM_NAME = "rosenbrock";
-    final static int POPULATION_SIZE = 1000;
+    final static int POPULATION_SIZE = 500;
     final static int MAX_GENERATIONS = 2000;
-    final static double CROSSOVER_RATE = 0.9;
-    final static double MUTATION_RATE = 0.01;
-    final static int GENOME_LENGTH = 32; // Bitstring length
+    final static double CROSSOVER_RATE = 0.7;
+    final static double MUTATION_RATE = 0.05;
+    final static int GENOME_LENGTH = 16; // Bitstring length
     final static int CONVERGENCE_THRESHOLD = 10; // Convergence threshold (number of generations with similar average fitness to terminate)
     final static double X_BOUND = 5; // x values can be between -N to N
     final static double Y_BOUND = 5; // y values can be between -N to N
@@ -68,7 +68,7 @@ class rosenbrock_SGA {
         initializePopulation();
 
         // Print header for generation stats
-        writeToFile("Generation\tChamp Fitness\tAvg Fitness\t\t%Identical");
+        writeToFile("Generation\tChamp Fitness\t\t\t\t\tAvg Fitness\t\t\t%Identical");
 
         // Evaluate population
         evaluatePopulation();
@@ -388,14 +388,14 @@ class rosenbrock_SGA {
         // check if population converged 
         //(average fitness of population has not changed by more than 1% in the last CONVERGENCE_THRESHOLD generations)
         if (generation >= CONVERGENCE_THRESHOLD) {
-            // if percent change in average fitness is less than 1% between each pair of generations in the last CONVERGENCE_THRESHOLD generations, terminate
+            // if percent change in average fitness is less than .1% between each pair of generations in the last CONVERGENCE_THRESHOLD generations, terminate
             double percentChange = 0;
             boolean converged = true;
             for (int i = 0; i < CONVERGENCE_THRESHOLD - 1; i++) {
                 double fitness1 = avgHistory[i];
                 double fitness2 = avgHistory[i + 1];
                 percentChange = Math.abs((fitness2 - fitness1) / fitness1);
-                if (percentChange > 0.01) {
+                if (percentChange > 0.001) {
                     converged = false;
                     break;
                 }
