@@ -266,7 +266,6 @@ class rosenbrock_SGA {
         // add individuals to roulette wheel, proportional to fitness (smallest fitness added zero times, largest fitness added POPULATION_SIZE-1 times)
         for (int i = 0; i < POPULATION_SIZE; i++) {
             Individual individual = individuals[i];
-            double fitness = individual.getFitness();
             int numTimes = i;
             for (int j = 0; j < numTimes; j++) {
                 rouletteWheel.add(individual);
