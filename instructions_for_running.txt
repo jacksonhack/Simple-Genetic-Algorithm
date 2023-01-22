@@ -1,0 +1,14 @@
+How to run my SGA programs
+
+- They are written in java
+- No additional libraries are required (beyond the standard java libraries)
+- They live in their respective folders (maxones and rosenbrock)
+- They can be compiled as one would normally compile a java program:
+    - Pre-requisites: ensure that you have java installed on your machine (JDK)
+    - From the command line (within the folder of the program you want to run), type:
+        - javac *.java (e.g. javac maxones_SGA.java)
+        - java [name of the main class] (e.g. java maxones_SGA)
+        - the output will be written to a file called "output.txt"
+
+    - alternatively, you can use an IDE such as VSCode to compile and run the program
+        using their extensions or plugins

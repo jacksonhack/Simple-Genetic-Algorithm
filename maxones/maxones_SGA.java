@@ -1,35 +1,29 @@
-package rosenbrock_program;
-
+package maxones;
 /*
  * Jackson Hacker
  * CS 5146: Evolutionary Computing
  * Simple Genetic Algorithm
  * 1/17/2023
  */
-
-
-// Import statements
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
-import java.util.ArrayList;
 
 // Class definition
-class rosenbrock_SGA {
+class maxones_SGA {
     // final Static variables
-    final static String PROBLEM_NAME = "rosenbrock";
-    final static int POPULATION_SIZE = 500;
+    final static String PROBLEM_NAME = "maxones";
+    final static int POPULATION_SIZE = 100;
     final static int MAX_GENERATIONS = 2000;
-    final static double CROSSOVER_RATE = 0.7;
-    final static double MUTATION_RATE = 0.05;
-    final static int GENOME_LENGTH = 16; // Bitstring length
+    final static double CROSSOVER_RATE = 0.5;
+    final static double MUTATION_RATE = 0.01;
+    final static int GENOME_LENGTH = 32; // Bitstring length
     final static int CONVERGENCE_THRESHOLD = 10; // Convergence threshold (number of generations with similar average fitness to terminate)
-    final static double X_BOUND = 5; // x values can be between -N to N
-    final static double Y_BOUND = 5; // y values can be between -N to N
 
     static boolean terminated; // Termination condition, flipped to true when termination condition is met
     static int generation; // Current generation
@@ -40,12 +34,12 @@ class rosenbrock_SGA {
     static Individual champion; // Champion
 
     // fitness meausures
-    static double maxFitness; // Max fitness
+    static int maxFitness; // Max fitness
     static double avgFitness; // Average fitness
     static double identical; // Percentage of Identical individuals
 
     static double[] avgHistory = new double[CONVERGENCE_THRESHOLD]; // History of average fitness over past N generations
-    
+
     // File writer
     static Writer fileWriter;
 
@@ -68,7 +62,7 @@ class rosenbrock_SGA {
         initializePopulation();
 
         // Print header for generation stats
-        writeToFile("Generation\tChamp Fitness\t\t\t\t\tAvg Fitness\t\t\t%Identical");
+        writeToFile("Generation\tChamp Fitness\tAvg Fitness\t\t%Identical");
 
         // Evaluate population
         evaluatePopulation();
@@ -96,10 +90,7 @@ class rosenbrock_SGA {
 
         // Print champion after termination
         writeToFile("\nChampion genotype:\t" + champion.toString());
-        writeToFile("Champion fitness:\t" + champion.getFitness());
-        writeToFile("Champion f(x, y):\t" + -1 * champion.getFitness());
-        writeToFile("Champion x value:\t" + getX(champion.getBitString()));
-        writeToFile("Champion y value:\t" + getY(champion.getBitString()));
+        writeToFile("Champion fitness (number of ones):\t" + champion.getFitness());
 
         // close file writer
         try {
@@ -130,59 +121,16 @@ class rosenbrock_SGA {
         population.setIndividuals(individuals);
     }
 
-    // binary to decimal function
-    public static int binaryToDecimal(int[] binary) {
-        int decimal = 0;
-        for (int i = 0; i < binary.length; i++) {
-            decimal += binary[i] * Math.pow(2, binary.length - i - 1);
-        }
-        return decimal;
-    }
-
-    // rosnebrock function
-    public static double rosenbrock(double x, double y) {
-        // f(x,y) = (a-x)^2 + b(y-x^2)^2
-        // a = 1, b = 100
-
-        double a = 1;
-        double b = 100;
-
-        return Math.pow(a - x, 2) + b * Math.pow(y - Math.pow(x, 2), 2);
-    }
-
-    // get x value from bitstring
-    public static double getX(int[] bitString) {
-        // get x value from bitstring
-        int[] x = Arrays.copyOfRange(bitString, 0, GENOME_LENGTH / 2);
-        int xDecimal = binaryToDecimal(x);
-        // scale x value to be between -X_BOUND and X_BOUND
-        return (-1 * X_BOUND) + (xDecimal * 10.0 / (Math.pow(2, GENOME_LENGTH / 2) - 1));
-    }
-
-    // get y value from bitstring
-    public static double getY(int[] bitString) {
-        // get y value from bitstring
-        int[] y = Arrays.copyOfRange(bitString, GENOME_LENGTH / 2, GENOME_LENGTH);
-        int yDecimal = binaryToDecimal(y);
-        return (-1 * Y_BOUND) + (yDecimal * 10.0 / (Math.pow(2, GENOME_LENGTH / 2) - 1));
-    }
-
     // calculate fitness of a single individual
-    public static double calculateFitness(Individual individual) {
-        // for minimizing rosenbrock, the fitness is the negative of the rosenbrock function (maximize the negative to minimize)
-        // from our representation, the first half of the bitstring is the x value, and the second half is the y value
-        // the x and y values are converted to a decimal value between -X_BOUND and X_BOUND, -Y_BOUND and Y_BOUND
-        // the rosenbrock function is then calculated with the x and y values
-
-        // get bitstring
+    public static int calculateFitness(Individual individual) {
+        // for maxones, fitness is the number of 1s in the bit string
+        int fitness = 0;
         int[] bitString = individual.getBitString();
-
-        double xValue = getX(bitString);
-        double yValue = getY(bitString);
-
-        // calculate rosenbrock function
-        double fitness = -1*rosenbrock(xValue, yValue);
-
+        for (int i = 0; i < GENOME_LENGTH; i++) {
+            if (bitString[i] == 1) {
+                fitness++;
+            }
+        }
         return fitness;
     }
 
@@ -192,7 +140,7 @@ class rosenbrock_SGA {
         Individual[] individuals = population.getIndividuals();
         for (int i = 0; i < POPULATION_SIZE; i++) {
             Individual individual = individuals[i];
-            double fitness = calculateFitness(individual);
+            int fitness = calculateFitness(individual);
             individual.setFitness(fitness);
         }
 
@@ -212,7 +160,7 @@ class rosenbrock_SGA {
         // Calculate max fitness, average fitness, and percentage of identical individuals
         for (int i = 0; i < POPULATION_SIZE; i++) {
             Individual individual = individuals[i];
-            double fitness = individual.getFitness();
+            int fitness = individual.getFitness();
 
             // max fitness
             if (fitness > maxFitness) {
@@ -251,7 +199,7 @@ class rosenbrock_SGA {
     }
 
      // function to build roulette wheel (fitness proportionatal selection)
-    private static List<Individual> buildRouletteWheel(Individual[] individuals, double totalFitness) {
+     private static List<Individual> buildRouletteWheel(Individual[] individuals, double totalFitness) {
         // for each individual, add it to the roulette wheel a proportional amount of times according to its fitness
         // the more fit an individual is, the more times it will be added to the roulette wheel
         List <Individual> rouletteWheel = new ArrayList<Individual>();
@@ -291,10 +239,10 @@ class rosenbrock_SGA {
         Individual[] individuals = population.getIndividuals();
 
         // get total fitness
-        double totalFitness = 0;
+        int totalFitness = 0;
         for (int i = 0; i < POPULATION_SIZE; i++) {
             Individual individual = individuals[i];
-            double fitness = individual.getFitness();
+            int fitness = individual.getFitness();
             totalFitness += fitness;
         }
 
@@ -388,14 +336,14 @@ class rosenbrock_SGA {
         // check if population converged 
         //(average fitness of population has not changed by more than 1% in the last CONVERGENCE_THRESHOLD generations)
         if (generation >= CONVERGENCE_THRESHOLD) {
-            // if percent change in average fitness is less than .1% between each pair of generations in the last CONVERGENCE_THRESHOLD generations, terminate
+            // if percent change in average fitness is less than 1% between each pair of generations in the last CONVERGENCE_THRESHOLD generations, terminate
             double percentChange = 0;
             boolean converged = true;
             for (int i = 0; i < CONVERGENCE_THRESHOLD - 1; i++) {
                 double fitness1 = avgHistory[i];
                 double fitness2 = avgHistory[i + 1];
                 percentChange = Math.abs((fitness2 - fitness1) / fitness1);
-                if (percentChange > 0.001) {
+                if (percentChange > 0.01) {
                     converged = false;
                     break;
                 }
@@ -408,6 +356,8 @@ class rosenbrock_SGA {
                 writeToFile("Termination reason: Average fitness converged\n\n");
             }
         }
+
+
     }
 
     // write to file function
@@ -425,12 +375,12 @@ class rosenbrock_SGA {
 class Individual {
     // Instance variables
     int[] bitString; // Bit string
-    double fitness; // Fitness
+    int fitness; // Fitness
 
     // Constructor
     public Individual() {
         // Initialize bit string
-        bitString = new int[rosenbrock_SGA.GENOME_LENGTH];
+        bitString = new int[maxones_SGA.GENOME_LENGTH];
 
         // Initialize fitness
         fitness = 0;
@@ -447,12 +397,12 @@ class Individual {
     }
 
     // Get fitness function
-    public double getFitness() {
+    public int getFitness() {
         return fitness;
     }
 
     // Set fitness function
-    public void setFitness(double fitness) {
+    public void setFitness(int fitness) {
         this.fitness = fitness;
     }
 
@@ -470,7 +420,7 @@ class Population {
     // Constructor
     public Population() {
         // Initialize individuals
-        individuals = new Individual[rosenbrock_SGA.POPULATION_SIZE];
+        individuals = new Individual[maxones_SGA.POPULATION_SIZE];
     }
 
     // Get individuals function
