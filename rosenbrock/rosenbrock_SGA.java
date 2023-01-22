@@ -27,7 +27,7 @@ class rosenbrock_SGA {
     final static double CROSSOVER_RATE = 0.7;
     final static double MUTATION_RATE = 0.05;
     final static int GENOME_LENGTH = 16; // Bitstring length
-    final static int CONVERGENCE_THRESHOLD = 10; // Convergence threshold (number of generations with similar average fitness to terminate)
+    final static int CONVERGENCE_THRESHOLD = 5; // Convergence threshold (number of generations with similar average fitness to terminate)
     final static double X_BOUND = 5; // x values can be between -N to N
     final static double Y_BOUND = 5; // y values can be between -N to N
 
@@ -263,11 +263,11 @@ class rosenbrock_SGA {
             }
         });
 
-        // add individuals to roulette wheel, proportional to fitness (smallest fitness added once, largest fitness added POPULATION_SIZE times)
+        // add individuals to roulette wheel, proportional to fitness (smallest fitness added zero times, largest fitness added POPULATION_SIZE-1 times)
         for (int i = 0; i < POPULATION_SIZE; i++) {
             Individual individual = individuals[i];
             double fitness = individual.getFitness();
-            int numTimes = (int) Math.floor((fitness / totalFitness) * POPULATION_SIZE);
+            int numTimes = i;
             for (int j = 0; j < numTimes; j++) {
                 rouletteWheel.add(individual);
             }
@@ -388,14 +388,14 @@ class rosenbrock_SGA {
         // check if population converged 
         //(average fitness of population has not changed by more than 1% in the last CONVERGENCE_THRESHOLD generations)
         if (generation >= CONVERGENCE_THRESHOLD) {
-            // if percent change in average fitness is less than .1% between each pair of generations in the last CONVERGENCE_THRESHOLD generations, terminate
+            // if percent change in average fitness is less than 1% between each pair of generations in the last CONVERGENCE_THRESHOLD generations, terminate
             double percentChange = 0;
             boolean converged = true;
             for (int i = 0; i < CONVERGENCE_THRESHOLD - 1; i++) {
                 double fitness1 = avgHistory[i];
                 double fitness2 = avgHistory[i + 1];
                 percentChange = Math.abs((fitness2 - fitness1) / fitness1);
-                if (percentChange > 0.001) {
+                if (percentChange > 0.01) {
                     converged = false;
                     break;
                 }
